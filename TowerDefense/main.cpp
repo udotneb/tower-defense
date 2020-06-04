@@ -22,6 +22,7 @@
 #include "ResourcePath.hpp"
 
 #include "turret.hpp"
+#include "towerselect.hpp"
 
 const int HEIGHT = 800;
 const int WIDTH = 600;
@@ -58,20 +59,18 @@ int main(int, char const**)
     }
     sf::Sprite sprite(texture);
     
-    
-    // add a circle
-    sf::CircleShape circle(50.f);
-    circle.setFillColor(sf::Color(100, 250, 50));
-    float x = 50.f;
-    
     std::list <Enemy> enemy_lst;
     std::list <Turret> turret_lst;
     std::list <Projectile> projectile_lst;
     
     Path path;
     initialize_path(&path);
+    TowerSelect tower_select;
     
+    int tower_place_index = -1; // index of tower that the player is trying to place, is -1 if no tower
     int game_time = 0;
+    sf::Vector2i mouse_position;
+    
     // Start the game loop
     while (window.isOpen())
     {
@@ -82,6 +81,7 @@ int main(int, char const**)
         
         // Process events
         sf::Event event;
+        
         while (window.pollEvent(event))
         {
             // Close window: exit
@@ -94,15 +94,20 @@ int main(int, char const**)
                 window.close();
             }
             
-            if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
-            {
-                sf::Vector2i localPosition = sf::Mouse::getPosition(window);
-                Turret turret(localPosition.x, localPosition.y, 50, &path);
-                turret_lst.push_back(turret);
+            mouse_position = sf::Mouse::getPosition(window);
+            if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+                if (tower_select.panel_pressed(&window, mouse_position)) { // selecting a tower from the menu
+                    tower_place_index = tower_select.index_pressed_tower(&window, mouse_position); // get tower from menu
+                    std::cout << tower_place_index;
+                    std::cout << "\n";
+                } else { // placing a tower
+                    if (tower_place_index != -1) {
+                        Turret t(mouse_position.x, mouse_position.y, tower_place_index, &path);
+                        turret_lst.push_back(t);
+                        tower_place_index = -1;
+                    }
+                }
             }
-            
-            sf::Vector2i localPosition = sf::Mouse::getPosition(window);
-            
         }
         
         window.clear();
@@ -124,7 +129,14 @@ int main(int, char const**)
         move_enemies(&enemy_lst, &path);
         draw_enemies(&enemy_lst, &window);
         
-        draw_turret_fire_radius_outline(&turret_lst, &window);
+        if (tower_place_index != -1) {
+            draw_mouse_turret(&window, mouse_position.x, mouse_position.y, tower_place_index);
+        } else { // draw on fire_radius of turret being hovered over
+            draw_turret_fire_radius_outline(&turret_lst, &window, mouse_position);
+        }
+
+        tower_select.draw_tower_select(&window);
+        
         // Update the window
         window.display();
         game_time++;

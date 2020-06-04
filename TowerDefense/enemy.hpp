@@ -12,7 +12,6 @@
 #include <stdio.h>
 #include "list"
 
-#include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
 
 #endif /* enemy_hpp */

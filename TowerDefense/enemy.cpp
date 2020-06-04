@@ -30,7 +30,6 @@ void Enemy::draw_enemy(sf::RenderWindow *window) {
 
     circle.setPosition(x, y);
     window->draw(circle);
-    return;
 }
 
 void draw_enemies(std::list <Enemy> *enemy_lst, sf::RenderWindow *window) {
